@@ -60,9 +60,7 @@ Use this checklist while working. Tick a phase only after its commit exists.
 - [ ] Phase 12 — GitHub MCP client
 - [ ] Phase 13 — CLI
 - [ ] Phase 14 — PR review workflow
-- [ ] Phase 15 — Optional: single-config eval
-- [ ] Phase 16 — Optional: eval workflow
-- [ ] Phase 17 — Docs, demo, final verification
+- [ ] Phase 15 — Docs, demo, final verification
 
 ## Phase map
 
@@ -93,7 +91,6 @@ Use this checklist while working. Tick a phase only after its commit exists.
 
 **Commit:** `chore: bootstrap python project and tooling`  
 **Depends on:** none  
-**Effort:** ~2 h  
 **Phase outcome:** A clean, installable Python project with the README layout,
 one passing smoke test, linting, and a committed lockfile.
 
@@ -102,8 +99,8 @@ one passing smoke test, linting, and a committed lockfile.
 | 0.1 | Non-tech | Create the public sandbox repo | Creates a public GitHub repo (Actions is free for public repos) and clones it locally | Empty remote and local repo |
 | 0.2 | Tech | Initialize project metadata | Adds `pyproject.toml` for Python 3.11+, `uv`, hatchling, and project metadata | Installable package |
 | 0.3 | Tech | Add dependencies | Runtime: `openai`, `pydantic`, `mcp`, `python-dotenv`. Dev: `pytest`, `ruff`. HTTP uses stdlib `urllib`; retries are custom code | Reproducible dependency set |
-| 0.4 | Tech | Create package skeleton | Creates `harness/`, `harness/agents/`, `harness/checks/`, `mcp_servers/`, `evals/`, `tests/` with `__init__.py` files | Importable modules matching README section 13 |
-| 0.5 | Tech | Add hygiene files | Adds `.gitignore` (`.venv`, `__pycache__`, `.env`, `evals/.cache`, logs), `.env.example`, and a license | No secrets/caches in git |
+| 0.4 | Tech | Create package skeleton | Creates `harness/`, `harness/agents/`, `harness/checks/`, `mcp_servers/`, `tests/` with `__init__.py` files | Importable modules matching README section 13 |
+| 0.5 | Tech | Add hygiene files | Adds `.gitignore` (`.venv`, `__pycache__`, `.env`, logs), `.env.example`, and a license | No secrets/caches in git |
 | 0.6 | Test | Add smoke test | `tests/test_package.py` imports the packages and checks the project version | Baseline test |
 | 0.7 | Tech | Configure tooling | Adds ruff and pytest settings, the `integration` marker, and no extra test plugins | `ruff` and `pytest` work |
 | 0.8 | Tech | Verify and commit | Runs `uv sync`, `uv run pytest`, `uv run ruff check .`, commits `uv.lock` | Green first commit |
@@ -132,11 +129,10 @@ uv run ruff check .
 
 ---
 
-## Phase 1 — Day-1 spike: GitHub MCP and LLM providers
+## Phase 1 — GitHub MCP and LLM providers
 
 **Commit:** `spike: verify github mcp and llm providers`  
 **Depends on:** Phase 0  
-**Effort:** ~3 h  
 **Phase outcome:** The three README Day-1 unknowns are answered with evidence:
 which token the official MCP server accepts, whether it can read a diff, and
 whether it can post a PR comment. The chosen low-tier model is recorded.
@@ -175,7 +171,6 @@ the observed tool names.
 
 **Commit:** `feat: add configuration and pydantic schemas`  
 **Depends on:** Phase 0  
-**Effort:** ~2 h  
 **Phase outcome:** Every later phase imports one frozen `Settings` object and
 one shared set of Pydantic contracts. No later phase needs to redefine them.
 The contract code to implement is in **Appendix E**.
@@ -217,7 +212,6 @@ uv run pytest tests/test_config.py tests/test_schemas.py -q
 
 **Commit:** `feat: add openai-compatible llm client`  
 **Depends on:** Phase 2  
-**Effort:** ~2 h  
 **Phase outcome:** One async client works with GitHub Models (and optionally
 Ollama) by changing env vars only. It retries 429/5xx/timeouts with a small
 custom loop, extracts JSON safely, and tracks calls, latency, and tokens.
@@ -264,7 +258,6 @@ uv run python -c "import asyncio; from harness.llm import LLMClient; from harnes
 
 **Commit:** `feat: add diff parsing and chunking utilities`  
 **Depends on:** Phase 2  
-**Effort:** ~3 h  
 **Phase outcome:** Pure functions turn a unified diff into changed-line facts,
 drop noise, enforce `MAX_DIFF_LINES`, and split oversized input into reviewable
 chunks. No LLM or MCP is involved.
@@ -306,7 +299,6 @@ uv run pytest tests/test_diff_utils.py -q
 
 **Commit:** `feat: add deterministic finding filter`  
 **Depends on:** Phase 4  
-**Effort:** ~2 h  
 **Phase outcome:** The judge receives deduplicated findings that point at real
 changed lines, ranked by severity and confidence. This is code, not an LLM call.
 
@@ -344,7 +336,6 @@ uv run pytest tests/test_filter.py -q
 
 **Commit:** `feat: add deterministic validation checks`  
 **Depends on:** Phase 4  
-**Effort:** ~3 h  
 **Phase outcome:** The five basic validation rules from README section 6.1 run
 without an LLM and return `Finding` objects. Rules live in one configurable file.
 
@@ -388,7 +379,6 @@ uv run pytest tests/test_checks.py -q
 
 **Commit:** `feat: add agent runtime with status handling`  
 **Depends on:** Phase 2, Phase 3  
-**Effort:** ~3 h  
 **Phase outcome:** Every agent uses one runtime that guarantees a status. It
 wraps prompts with untrusted-data boundaries, enforces timeouts, retries invalid
 output once, and maps 429/errors/timeouts to the README status enum.
@@ -432,7 +422,6 @@ uv run pytest tests/test_agent_base.py -q
 
 **Commit:** `feat: add validation security and performance agents`  
 **Depends on:** Phase 6, Phase 7  
-**Effort:** ~3 h  
 **Phase outcome:** Three narrow specialist agents return validated findings and
 statuses. Validation is deterministic; security and performance use one LLM
 call each. With the judge, the default review is **three LLM calls**.
@@ -477,7 +466,6 @@ uv run pytest tests/test_agents.py -q
 
 **Commit:** `feat: add judge and comment renderer`  
 **Depends on:** Phase 2, Phase 7  
-**Effort:** ~4 h  
 **Phase outcome:** A judge merges and ranks findings into a `FinalReview`, a
 renderer produces the README comment format with the full status table, and a
 plain-code fallback works when the judge fails.
@@ -523,7 +511,6 @@ uv run pytest tests/test_render.py -q
 
 **Commit:** `feat: add review-tools mcp server`  
 **Depends on:** Phase 4, Phase 6  
-**Effort:** ~3 h  
 **Phase outcome:** A small FastMCP stdio server exposes exactly the four README
 tools and reuses the pure helpers. The `post_comment` fallback is implemented but
 only used if the official GitHub server cannot post.
@@ -566,7 +553,6 @@ uv run python -c "import mcp_servers.review_tools"
 
 **Commit:** `feat: add review orchestrator`  
 **Depends on:** Phase 5, Phase 8, Phase 9  
-**Effort:** ~4 h  
 **Phase outcome:** The complete online pipeline runs end-to-end with injected
 fakes: fetch, prepare, fan-out, filter, judge, render, and post (or print in
 dry-run). Every failure path still returns a comment and statuses.
@@ -610,7 +596,6 @@ uv run pytest tests/test_orchestrator.py -q
 
 **Commit:** `feat: integrate github mcp client`  
 **Depends on:** Phase 1, Phase 10  
-**Effort:** ~3 h  
 **Phase outcome:** The harness starts the official GitHub MCP server over stdio,
 discovers tools at runtime, reads PR metadata/diffs, and posts the comment. It
 uses the custom fallback only when the official server cannot post.
@@ -651,7 +636,6 @@ uv run pytest tests/test_mcp_client.py -q
 
 **Commit:** `feat: add review cli`  
 **Depends on:** Phase 11, Phase 12  
-**Effort:** ~2 h  
 **Phase outcome:** A CLI can review a real PR, print the comment in dry-run, and
 return sensible exit codes. Local diff mode is optional for development.
 
@@ -693,7 +677,6 @@ uv run pytest tests/test_cli.py -q
 
 **Commit:** `ci: add pull request review workflow`  
 **Depends on:** Phase 13  
-**Effort:** ~2 h + sandbox testing  
 **Phase outcome:** Opening or updating a same-repo PR on the public sandbox repo
 posts one review comment. Stale runs are cancelled, permissions are minimal, and
 the workflow contract is tested.
@@ -735,135 +718,24 @@ Then push a commit to the sandbox PR and inspect the Actions run and comment.
 
 ---
 
-## Phase 15 — Optional: single-configuration eval
-
-**Commit:** `test: add optional single-config eval`  
-**Depends on:** Phase 11, Phase 13  
-**Effort:** ~4 h (optional)  
-**Phase outcome:** An optional, simple eval suite: 10–11 labeled diffs, a strict
-matcher, a scorer, and one runner configuration. It runs the real pipeline in
-dry-run and writes one results table. No single-vs-multi comparison.
-
-> Optional. Implement only after Phases 0–14 work. Skip it if time is short.
-> All `evals/` files are optional Python files.
-
-| # | Type | Step | What it does | Outcome |
-|---|---|---|---|---|
-| 15.1 | Tech | Define the expected schema | Case id, category, PR title/body, expected findings with file, line range, keywords, severity | Stable labels |
-| 15.2 | Tech | Add the dataset loader | Discovers case folders, parses `expected.json`, validates with Pydantic | Typed cases |
-| 15.3 | Test | Create 3 security cases | SQL injection via f-string, weak randomness, hardcoded secret | Security labels |
-| 15.4 | Test | Create 1 injection case | A code comment tells the reviewer to ignore issues and approve | Injection label |
-| 15.5 | Test | Create 3 performance cases | N+1 query, whole-file memory load, repeated expensive work | Performance labels |
-| 15.6 | Test | Create 2 validation cases | Missing docstrings/type hints; source change with no tests and empty description | Validation labels |
-| 15.7 | Test | Create 2 clean cases | No planted problems, to measure false alarms | False-positive baseline |
-| 15.8 | Docs | Add the dataset README and template | Explains how to add a case and what a good label looks like | Repeatable dataset work |
-| 15.9 | Tech | Add the strict matcher | Same file + overlapping line range + same category = true positive; no LLM referee | Deterministic grading |
-| 15.10 | Tech | Add the scorer | Computes TP/FP/FN, precision, recall, per-category counts, and clean-case false positives | Metrics |
-| 15.11 | Tech | Add the single-config runner | Runs the full pipeline in dry-run for every case; supports `--provider`, `--limit`, `--repeats`, and a response cache | One-config eval |
-| 15.12 | Tech | Add the results renderer | Writes one Markdown table with precision, recall, calls, and latency | `evals/results.md` |
-| 15.13 | Test | Add eval tests | Dataset integrity, matcher cases, scorer math, runner wiring, cache hit | Eval is trustworthy |
-| 15.14 | Non-tech | Run it locally | Uses GitHub Models or optional Ollama, 2–3 repeats, and records real numbers | Optional evidence |
-
-**Files:** `evals/dataset/<case>/diff.patch`,
-`evals/dataset/<case>/expected.json`, `evals/dataset/README.md`,
-`evals/loader.py`, `evals/eval_agent.py`, `evals/scorer.py`,
-`evals/run_eval.py`, `tests/test_dataset.py`, `tests/test_eval_agent.py`,
-`tests/test_scorer.py`, `tests/test_run_eval.py`, `evals/results.md`.
-
-**Tests:** required only if this optional phase is implemented. The matcher is
-strict-only; there is no fuzzy LLM referee. Include zero-denominator scorer
-cases.
-
-**Skill file:** **optional** — create `.opencode/skills/new-eval-case/SKILL.md`
-and `.opencode/skills/run-evals/SKILL.md` only if this phase is implemented.
-See Appendix A.
-
-**Acceptance:**
-
-- Exactly one eval configuration exists: the real pipeline in dry-run.
-- There is no single-agent or multi-agent comparison.
-- 10–11 cases exist; at least one is clean and one is an injection case.
-- Every expected file/line range appears in that case's diff.
-- The matcher is strict-only and deterministic.
-- Cache hits do not call the LLM.
-- `evals/.cache` is gitignored; `evals/results.md` is optional.
-
-**Verify:**
-
-```bash
-uv run pytest tests/test_dataset.py tests/test_eval_agent.py tests/test_scorer.py tests/test_run_eval.py -q
-# Optional local run, with Ollama already running:
-uv run python -m evals.run_eval --provider ollama --repeats 2
-```
-
----
-
-## Phase 16 — Optional: eval workflow
-
-**Commit:** `ci: add optional eval workflow`  
-**Depends on:** Phase 14, Phase 15  
-**Effort:** ~1 h (optional)  
-**Phase outcome:** An optional manually triggered workflow runs the single-config
-eval, uploads `results.md`, and writes the table to the job summary. It never
-runs on PRs.
-
-> Optional. Skip this phase if Phase 15 is skipped.
-
-| # | Type | Step | What it does | Outcome |
-|---|---|---|---|---|
-| 16.1 | Tech | Add `workflow_dispatch` | Inputs for provider, model, repeats, and case limit | Manual control |
-| 16.2 | Tech | Set permissions and setup | `contents: read`, `models: read`; checkout, uv, sync | Safe eval runner |
-| 16.3 | Tech | Add the eval step | Runs `python -m evals.run_eval` with the selected inputs | Eval execution |
-| 16.4 | Tech | Add artifact and summary | Uploads `evals/results.md` and appends it to the job summary | Shareable results |
-| 16.5 | Tech | Add quota guards | Default one repeat and a small case limit | Quota-safe defaults |
-| 16.6 | Test | Extend workflow contract tests | Asserts no `pull_request` trigger, correct permissions, and inputs | CI drift protection |
-| 16.7 | Non-tech | Run it once | Triggers the workflow and verifies the artifact and summary | Proven manual path |
-
-**Files:** `.github/workflows/eval.yml`, `tests/test_workflow_contract.py`,
-`docs/eval.md`.
-
-**Tests:** required only if this optional phase is implemented. Use plain string
-assertions in the workflow contract test.
-
-**Skill file:** none. The optional `run-evals` skill from Phase 15 covers it.
-
-**Acceptance:**
-
-- The workflow can only be started manually.
-- It uploads `evals/results.md`.
-- The job summary shows the single results table.
-- Default inputs do not burn the free quota.
-- The workflow has no PR write permission.
-
-**Verify:**
-
-```bash
-uv run pytest tests/test_workflow_contract.py -q
-```
-
-Then trigger `eval.yml` from the Actions UI and inspect the artifact.
-
----
-
-## Phase 17 — Docs, demo, and final verification
+## Phase 15 — Docs, demo, and final verification
 
 **Commit:** `docs: finalize readme demo and quick start`  
 **Depends on:** Phase 14 (and Phase 16 if evals were implemented)  
-**Effort:** ~2–3 h  
 **Phase outcome:** The README is a complete project page with a working quick
 start, architecture links, honest limitations, and a demo. The core product
 meets the README definition of done.
 
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
-| 17.1 | Docs | Add quick start | Covers `uv sync`, GitHub Models, CLI dry-run, and optional Ollama | New user can run it |
-| 17.2 | Docs | Link the project docs | Links `AGENTS.md`, `PLAN.md`, `ARCHITECTURE.md`, and `docs/` | Discoverable design |
-| 17.3 | Docs | Add the demo | Records a GIF/video: open PR, show comment, show timeout, show injection case | Interview demo |
-| 17.4 | Docs | Add limitations and tradeoffs | Free-tier quality, fork limitation, summary-only comments, no persistence | Honest engineering |
-| 17.5 | Docs | Add eval results only if present | Links `evals/results.md` when Phase 15 was implemented; otherwise says optional and not run | No false claims |
-| 17.6 | Non-tech | Final verification | Runs the full test suite, lint, dry-run, live sandbox PR, and secret scan | Definition of done |
-| 17.7 | Docs | Update the definition of done | Checks each core README item and marks eval as optional | Release-ready |
-| 17.8 | Docs | Align README with the simplified stack | Removes old retry/HTTP/eval-comparison claims and points to the optional single-config eval | One source of truth |
+| 15.1 | Docs | Add quick start | Covers `uv sync`, GitHub Models, CLI dry-run, and optional Ollama | New user can run it |
+| 15.2 | Docs | Link the project docs | Links `AGENTS.md`, `PLAN.md`, `ARCHITECTURE.md`, and `docs/` | Discoverable design |
+| 15.3 | Docs | Add the demo | Records a GIF/video: open PR, show comment, show timeout, show injection case | Interview demo |
+| 15.4 | Docs | Add limitations and tradeoffs | Free-tier quality, fork limitation, summary-only comments, no persistence | Honest engineering |
+| 15.5 | Docs | Add eval results only if present | Links `evals/results.md` when Phase 15 was implemented; otherwise says optional and not run | No false claims |
+| 15.6 | Non-tech | Final verification | Runs the full test suite, lint, dry-run, live sandbox PR, and secret scan | Definition of done |
+| 15.7 | Docs | Update the definition of done | Checks each core README item and marks eval as optional | Release-ready |
+| 15.8 | Docs | Align README with the simplified stack | Removes old retry/HTTP/eval-comparison claims and points to the optional single-config eval | One source of truth |
 
 **Files:** `README.md`, `docs/demo.md`, `docs/demo.gif` (or a linked recording),
 `docs/limitations.md` (optional).

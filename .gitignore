@@ -1,1 +1,33 @@
+# Local-only source notes
 README.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Test and lint caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build output
+build/
+dist/
+*.egg-info/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Eval cache and logs
+evals/.cache/
+*.log
+
+# Editors and OS files
+.DS_Store
+.idea/
+.vscode/
