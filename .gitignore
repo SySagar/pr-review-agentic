@@ -1,5 +1,7 @@
 # Local-only source notes
 README.md
+challenges.md
+docs/*.txt
 
 # Python
 __pycache__/
