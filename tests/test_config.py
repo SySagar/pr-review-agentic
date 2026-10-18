@@ -10,7 +10,6 @@ from harness.config import (
     DEFAULT_LLM_BASE_URL,
     DEFAULT_LLM_MODEL,
     DEFAULT_MAX_DIFF_LINES,
-    Settings,
 )
 from tests.factories.config_factory import build_settings
 

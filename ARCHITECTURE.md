@@ -459,3 +459,19 @@ LLM_API_KEY=<google-ai-studio-key>
 - No RAG or embeddings.
 - No automatic code fixes or commits.
 - No sticky-comment editing in v1; it is an optional stretch after Phase 17.
+
+## 15. Testing conventions
+
+- Tests live under `tests/` and use plain `pytest`; async test bodies run with
+  `asyncio.run`.
+- **Build test data through factories in `tests/factories/`; do not construct
+  fixtures inline in test bodies.**
+  - Add or extend a factory whenever a new object shape is needed.
+  - Factories return domain objects or small typed harnesses such as
+    `LLMHarness`; the test overrides only the fields relevant to its behavior.
+  - Keep defaults in the factory so one change updates every test.
+- Unit tests must not touch the network, Docker, a real LLM, or GitHub. Inject
+  fakes through the same ports the production code uses.
+- Mark live checks `@pytest.mark.integration`; they are not part of the fast
+  default suite.
+- Every bug fix adds a regression test.

@@ -214,7 +214,7 @@ uv run pytest tests/test_config.py tests/test_schemas.py -q
 **Depends on:** Phase 2  
 **Phase outcome:** One async client works with Google Gemini by changing env
 vars only. It retries 429/5xx/timeouts with a small custom loop, extracts JSON
-safely, and tracks calls, latency, and tokens.
+safely, and tracks calls and latency.
 
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
@@ -222,7 +222,7 @@ safely, and tracks calls, latency, and tokens.
 | 3.2 | Tech | Add JSON chat method | Sends system/user messages, requests JSON when supported, strips fences, parses one object | Validated JSON payload |
 | 3.3 | Tech | Add retries | Small custom loop for 429/5xx/timeouts: two retries, exponential backoff | Transient errors absorbed |
 | 3.4 | Tech | Add terminal errors | Raises typed `RateLimitExhausted` vs generic `LLMError` | Agents can map statuses |
-| 3.5 | Tech | Add telemetry | Counts calls, retries, prompt/completion tokens, and latency; never logs secrets | Review metrics available |
+| 3.5 | Tech | Add telemetry | Counts calls, retries, and latency; never logs secrets | Review metrics available |
 | 3.6 | Test | Add fake-client tests | Covers 429 then success, exhausted retries, bad JSON, fence stripping, env swap | Deterministic tests |
 
 **Files:** `harness/llm.py`, `tests/test_llm.py`.

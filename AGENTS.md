@@ -225,6 +225,8 @@ Rules:
 - Use fakes for the LLM and MCP clients, `tmp_path` for files, and `monkeypatch`
   for environment variables.
 - Use plain `pytest`; run async test bodies with `asyncio.run`.
+- Build test data through factories in `tests/factories/`; do not construct
+  fixtures inline in test bodies.
 - Mark live tests `@pytest.mark.integration`; they are not part of the default
   fast suite.
 - Golden files go under `tests/golden/`.
