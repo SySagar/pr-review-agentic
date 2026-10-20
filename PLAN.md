@@ -70,7 +70,7 @@ Use this checklist while working. Tick a phase only after its commit exists.
 | 1 | `spike: verify github mcp and llm providers` | Day-1 unknowns resolved in a findings doc | 0 |
 | 2 | `feat: add configuration and pydantic schemas` | Frozen env config and data contracts | 0 |
 | 3 | `feat: add openai-compatible llm client` | One async LLM client with retries and telemetry | 2 |
-| 4 | `feat: add diff parsing and chunking utilities` | Pure diff parsing, denoise, cap, chunk | 2 |
+| 4 | `feat: add diff parsing and noise filtering` | Pure diff parsing and denoise; chunking/cap deferred | 2 |
 | 5 | `feat: add deterministic finding filter` | Dedupe and line-verification before the judge | 4 |
 | 6 | `feat: add deterministic validation checks` | Ruff/AST/PR checks without an LLM | 4 |
 | 7 | `feat: add agent runtime with status handling` | Prompt runner with timeout, retry, statuses | 2, 3 |
@@ -254,28 +254,40 @@ uv run python -c "import asyncio; from harness.llm import LLMClient; from harnes
 
 ---
 
-## Phase 4 — Diff parsing, noise filtering, caps, and chunking
+## Phase 4 — Diff parsing and noise filtering
 
-**Commit:** `feat: add diff parsing and chunking utilities`  
+**Commit:** `feat: add diff parsing and noise filtering`  
 **Depends on:** Phase 2  
-**Phase outcome:** Pure functions turn a unified diff into changed-line facts,
-drop noise, enforce `MAX_DIFF_LINES`, and split oversized input into reviewable
-chunks. No LLM or MCP is involved.
+**Phase outcome:** Pure functions turn a unified diff into changed-line facts and
+drop noise. No LLM or MCP is involved.
 
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
-| 4.1 | Tech | Define diff models | `DiffFile`, `Hunk`, `DiffInfo` with path, additions, deletions, line ranges | Typed diff facts |
-| 4.2 | Tech | Parse unified diffs | Handles added/removed lines, new files, renames, binary markers, and missing newline markers | Reliable changed-line map |
+| 4.1 | Tech | Define diff models | `DiffFile`, `DiffInfo` with path, additions, deletions, and changed line numbers | Typed diff facts |
+| 4.2 | Tech | Parse unified diffs | Handles added/removed/context lines, new/deleted/renamed paths, and missing-newline markers | Reliable changed-line map |
 | 4.3 | Tech | Filter noise | Drops lockfiles, generated files, vendored code, images, and binary paths by configurable patterns | Reviewer focuses on code |
-| 4.4 | Tech | Enforce the size cap | Counts changed lines and returns a `too_large` result against `MAX_DIFF_LINES` | Predictable short-circuit |
-| 4.5 | Tech | Chunk the diff | Splits by file then hunk under a line budget without losing line numbers | Safe prompt-sized chunks |
-| 4.6 | Test | Add fixtures | Covers additions, deletions, new file, rename, binary, empty diff, and oversized diff | Regression safety |
+| 4.4 | Test | Add fixtures | Covers additions, deletions, new file, rename, deletion, missing newline, empty diff, noise, malformed hunk | Regression safety |
 
-**Files:** `harness/diff_utils.py`, `tests/test_diff_utils.py`,
-`tests/fixtures/diffs/*.patch`.
+**Files:** `harness/diff_models.py`, `harness/diff_utils.py`,
+`tests/test_diff_utils.py`, `tests/fixtures/diffs/*.patch`.
 
 **Tests:** required. Cover line numbering carefully; it is the basis for
 line-verification later.
+
+**Not handled in this phase (explicit):**
+
+- **Chunking** — no prompt-sized splitting; the phase that needs chunks adds it.
+- **Oversized diffs** — no `MAX_DIFF_LINES` cap or `too_large` short-circuit;
+  the orchestrator owns that behavior.
+- **Binary diffs** — `Binary files ... differ` and `GIT binary patch` are not
+  interpreted. Such paths pass through with no hunks unless a noise pattern
+  drops them.
+- **Combined/merge diffs** (`@@@` hunks) and submodule changes.
+- **Plain unified diffs** without a `diff --git` header, and paths containing
+  spaces.
+- **Hunk objects and file status**: the parser keeps only path, additions,
+  deletions, and changed line numbers; callers that need hunk text or rename
+  status must add it.
 
 **Skill file:** none.
 
@@ -283,9 +295,9 @@ line-verification later.
 
 - Changed lines match the patch for added, removed, and context lines.
 - A new file and a rename produce the correct repo-relative path.
-- Noise files do not count toward the cap.
-- Oversized diffs are reported, not silently truncated.
-- Chunking never changes line numbers.
+- Noise files are dropped from the prepared review context.
+- The parser never crashes on an empty diff or a malformed hunk header.
+- The module docstring lists the cases this phase does not handle.
 
 **Verify:**
 

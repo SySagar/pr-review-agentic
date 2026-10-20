@@ -1,0 +1,11 @@
+diff --git a/pkg/old_name.py b/pkg/new_name.py
+similarity index 90%
+rename from pkg/old_name.py
+rename to pkg/new_name.py
+index 1111111..2222222 100644
+--- a/pkg/old_name.py
++++ b/pkg/new_name.py
+@@ -1,2 +1,2 @@
+ VALUE = 1
+-OLD = True
++NEW = True

@@ -270,7 +270,8 @@ Rules:
 | `harness/llm.py` | OpenAI-compatible async calls, custom retries, telemetry | `LLMClient` |
 | `harness/mcp_client.py` | Stdio sessions, tool discovery, PR read/post | `GitHubMCPClient` |
 | `harness/schemas.py` | Pydantic contracts | `Finding`, `AgentOutput`, `AgentRunResult`, `FinalReview` |
-| `harness/diff_utils.py` | Parse, denoise, cap, chunk | `DiffInfo`, `chunk_diff` |
+| `harness/diff_models.py` | Minimal diff dataclasses | `DiffFile`, `DiffInfo` |
+| `harness/diff_utils.py` | Parse, denoise, prepare | `parse_diff`, `prepare_diff` |
 | `harness/filter.py` | Dedupe, line verify, rank | `filter_findings` |
 | `harness/render.py` | Markdown comment, status table, and fallback | `render_review`, `render_fallback` |
 | `harness/agents/base.py` | Prompt runner, timeout, retry, status | `AgentRunner` |
@@ -285,6 +286,10 @@ Rules:
 | `tests/` | Unit, golden, and integration tests | `pytest` |
 
 The Pydantic contract code lives in **`PLAN.md` Appendix E**.
+
+The Phase 4 diff module parses and denoises only. It does not chunk, enforce
+`MAX_DIFF_LINES`, or interpret binary/combined diffs; the caller that needs
+those behaviors adds them.
 
 ## 9. LLM use
 

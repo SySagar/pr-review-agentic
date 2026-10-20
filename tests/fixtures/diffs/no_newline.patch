@@ -1,0 +1,9 @@
+diff --git a/app/eof.py b/app/eof.py
+index 1111111..2222222 100644
+--- a/app/eof.py
++++ b/app/eof.py
+@@ -1,1 +1,1 @@
+-OLD = 1
+\ No newline at end of file
++NEW = 1
+\ No newline at end of file

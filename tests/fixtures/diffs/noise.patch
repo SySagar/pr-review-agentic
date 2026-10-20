@@ -1,0 +1,16 @@
+diff --git a/uv.lock b/uv.lock
+index 1111111..2222222 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -1,2 +1,2 @@
+-version = 1
++version = 2
+ checksum = "x"
+
+diff --git a/app/real.py b/app/real.py
+index 1111111..2222222 100644
+--- a/app/real.py
++++ b/app/real.py
+@@ -1,1 +1,2 @@
+ VALUE = 1
++OTHER = 2

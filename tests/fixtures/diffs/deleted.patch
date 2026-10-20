@@ -1,0 +1,8 @@
+diff --git a/pkg/removed.py b/pkg/removed.py
+deleted file mode 100644
+index 3333333..0000000
+--- a/pkg/removed.py
++++ /dev/null
+@@ -1,2 +0,0 @@
+-"""Gone."""
+-DELETED = True
