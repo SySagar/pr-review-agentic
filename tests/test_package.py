@@ -1,5 +1,4 @@
 import importlib
-from importlib.metadata import version
 
 import evals
 import harness
