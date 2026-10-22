@@ -98,7 +98,7 @@ uv run python -m harness.cli review \
   --diff-file tests/fixtures/diffs/simple.patch --dry-run
 
 # Optional single-config eval (Phase 15)
-uv run python -m evals.run_eval --provider ollama --repeats 2
+uv run python -m evals.run_eval --repeats 2
 ```
 
 Use `uv run` for every Python command so the project environment is used.
@@ -192,8 +192,8 @@ Do not create new top-level folders without a reason in `PLAN.md`.
 
 ## 9. Security rules
 
-- Least-privilege workflow permissions:
-  `contents: read`, `pull-requests: write`, `models: read`.
+- Least-privilege workflow permissions: `contents: read`, `pull-requests: write`.
+- Store the Google AI Studio key as the `LLM_API_KEY` repository secret.
 - Use `GITHUB_TOKEN` first. Use `GITHUB_PERSONAL_ACCESS_TOKEN` only if the MCP
   server rejects the workflow token; store it as a repository secret.
 - Ignore events authored by the bot.
@@ -273,7 +273,7 @@ live in this file.
 - Posting an empty comment when the judge fails.
 - Sending prompts without delimiters around PR content.
 - Logging `Authorization` headers or the token by accident.
-- Forgetting `models: read` in the workflow.
+- Forgetting the `LLM_API_KEY` repository secret in the workflow.
 - Trying to comment on a fork PR with a read-only token.
 - Running the eval suite on every PR and burning the free quota.
 - Committing the eval cache or `.env`.

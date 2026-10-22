@@ -17,7 +17,7 @@ Hard constraints that shape the architecture:
 
 | Constraint | Architectural consequence |
 |---|---|
-| Zero cost | GitHub-hosted public repo, GitHub Actions free tier, GitHub Models free tier; Ollama is optional for local dev |
+| Zero cost | GitHub-hosted public repo, GitHub Actions free tier, Google Gemini API free tier |
 | Stateless | No database, no queue, no cache at PR time; the runner is disposable |
 | Python only | One Python package tree for harness, MCP server, and optional evals |
 | No frontend/server | The PR comment is the only UI; Actions is the only runtime |
@@ -40,8 +40,7 @@ flowchart TB
     H -->|stdio| RT[review-tools MCP server<br/>mcp_servers/review_tools.py]
 
     H --> LLM[LLM client<br/>harness/llm.py]
-    LLM -->|OpenAI-compatible| GHM[GitHub Models<br/>CI]
-    LLM -->|OpenAI-compatible| OL[Ollama<br/>optional local dev]
+    LLM -->|OpenAI-compatible| GEM[Google Gemini API<br/>free tier]
 
     H -->|one summary comment| GHMCP
     GHAPI -->|comment| GH
@@ -201,7 +200,7 @@ stateDiagram-v2
 | Language | **Python 3.11+** | Harness, MCP server, optional evals | One language for the whole repo |
 | Concurrency | **`asyncio`** | Parallel agents, timeouts | `gather`, `wait_for` |
 | Validation | **Pydantic v2** | Findings, agent output, status, final review | Drives the one-retry rule |
-| LLM SDK | **`openai`** | Any OpenAI-compatible endpoint | GitHub Models; Ollama optional |
+| LLM SDK | **`openai`** | Any OpenAI-compatible endpoint | Google Gemini by default |
 | Retries | **Custom loop** | 429/5xx/timeout handling | No retry library; max two retries |
 | HTTP | **stdlib `urllib.request`** | HTTPS fallback for posting comments | No third-party HTTP client |
 | MCP | **`mcp` SDK / FastMCP** | Client and custom stdio server | Official protocol |
@@ -232,34 +231,33 @@ server, tunnels such as ngrok, any paid API, any paid hosting, and fine-tuning.
 |---|---|---|---|---|
 | **GitHub** (public repo) | PRs, branches, comments | GitHub account | Free | Public sandbox repo; same-repo branches for demos; comments appear as the `github-actions` bot |
 | **GitHub Actions** | Trigger, runner, queue, worker | Built-in | Free for public repos | Standard hosted runner |
-| **GitHub Models** | CI inference | `GITHUB_TOKEN` with `models: read` | Free per-model rate limits | Primary CI provider; choose a low-tier model |
+| **Google Gemini API** | LLM inference for CI and local runs | Google AI Studio API key | Free tier, per-project rate limits | Primary provider; endpoint `https://generativelanguage.googleapis.com/v1beta/openai/`; default model `gemini-3.5-flash-lite` |
 | **GitHub API** | PR data and comments | `GITHUB_TOKEN` or PAT | Free | Reached through the official MCP server |
 | **GitHub Container Registry** | Official MCP image | Public pull | Free | Pull time measured in Phase 1 |
-| **Ollama** | Optional local inference and optional eval runs | None | Free, needs roughly 8 GB free RAM | Not required for CI; endpoint `http://localhost:11434/v1` |
 
 ### Models
 
 | Role | Model selection | Configuration |
 |---|---|---|
-| PR review agents (CI) | Low-tier, JSON-capable GitHub Models model chosen in Phase 1 | `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` |
-| Local development | Optional 7–8B JSON-capable coding model in Ollama | Same env vars, different values |
+| PR review agents (CI) | Low-tier, JSON-capable Gemini model chosen in Phase 1 | `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` |
+| Local development | Same Gemini model and key | Same env vars |
 | Judge | Same provider/model as the agents by default | One LLM call |
 | Validation | Deterministic checks by default | No LLM call |
 
 Starting points, to be confirmed in Phase 1:
 
-- **GitHub Models:** a low-tier, JSON-capable mini/8B-class model from the
-  catalog. Use the exact catalog ID in `LLM_MODEL`; do not hard-code it.
-- **Ollama:** optional local development. A 7–8B coding model such as
-  `qwen2.5-coder:7b` or `llama3.1:8b`, subject to available RAM.
+- **Google Gemini:** `gemini-3.5-flash-lite` on the free tier. Use the exact
+  model ID in `LLM_MODEL`; do not hard-code it.
+- **Higher quality:** `gemini-3.8-flash` is available, but its free daily quota
+  is much smaller. Change only `LLM_MODEL`.
 
 Rules:
 
 - Never hard-code a vendor model ID in Python. It comes from `LLM_MODEL`.
-- Verify the model's free-tier limits on its catalog page before using it.
+- Verify the model's free-tier limits in Google AI Studio before using it.
 - Expect roughly **2–3 LLM calls** per review: security, performance, and judge.
   Validation is deterministic.
-- Ollama is optional; use it only for local development or repeated evals.
+- Cache eval responses so repeated runs do not exhaust the free daily quota.
 - Do not assume a free Claude API tier. Nothing may require paid access.
 
 ## 8. Module map
@@ -381,8 +379,8 @@ The server imports pure helpers from `harness.diff_utils` and
 
 ### 11.3 Secrets and permissions
 
-- Workflow permissions: `contents: read`, `pull-requests: write`,
-  `models: read`.
+- Workflow permissions: `contents: read`, `pull-requests: write`.
+- Store the Google AI Studio key as the `LLM_API_KEY` repository secret.
 - No `write-all`.
 - No secrets in prompts, logs, findings, or comments.
 - Redact tokens in `Settings.__repr__` and exception messages.
@@ -405,7 +403,7 @@ All configuration is environment-only.
 |---|---|---|
 | `LLM_BASE_URL` | OpenAI-compatible endpoint | none; required |
 | `LLM_MODEL` | Model identifier | none; required |
-| `LLM_API_KEY` | Provider key; workflow token in CI, placeholder for optional Ollama | none |
+| `LLM_API_KEY` | Google AI Studio API key | none |
 | `GITHUB_TOKEN` | Read PRs and post comments | injected by Actions |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | PAT fallback for the MCP server | unset |
 | `AGENT_TIMEOUT_SECONDS` | Per-agent timeout | `90` |
@@ -425,15 +423,10 @@ Optional MCP overrides after Phase 1:
 Provider examples:
 
 ```bash
-# GitHub Models in CI
-LLM_BASE_URL=https://models.github.ai/inference
-LLM_MODEL=<low-tier JSON-capable model>
-LLM_API_KEY=$GITHUB_TOKEN
-
-# Ollama locally (optional)
-LLM_BASE_URL=http://localhost:11434/v1
-LLM_MODEL=<local 7B-8B coding model>
-LLM_API_KEY=ollama
+# Google Gemini free tier (CI and local)
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_MODEL=gemini-3.5-flash-lite
+LLM_API_KEY=<google-ai-studio-key>
 ```
 
 ## 13. Design decisions
@@ -444,7 +437,7 @@ LLM_API_KEY=ollama
 | GitHub Actions as queue and worker | Free for public repos; no server to host | Runs are ephemeral and capped by Actions limits |
 | Reuse the official GitHub MCP server | Avoid rebuilding GitHub auth and API coverage | Must discover tool names at runtime |
 | Small custom MCP server | Owns only the gap: diff facts, standards, fallback post | Less code to maintain |
-| OpenAI-compatible provider | GitHub Models in CI, optional Ollama locally, no code changes | Model quality varies; prompts must be robust |
+| OpenAI-compatible provider | Google Gemini free tier by default, no code changes to swap | Model quality varies; prompts must be robust |
 | Pydantic + one retry | Structured output is the core reliability mechanism | One extra call on malformed output |
 | Deterministic filter before judge | Removes obvious noise cheaply | Judge sees fewer, better candidates |
 | Code-owned status table | The model cannot honestly report its own timeout/failure | Renderer uses real `AgentRunResult`s, not judge text |

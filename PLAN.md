@@ -142,7 +142,7 @@ whether it can post a PR comment. The chosen low-tier model is recorded.
 | 1.1 | Tech | Write the GitHub MCP spike script | Starts `ghcr.io/github/github-mcp-server` over Docker stdio and calls `tools/list` | Full tool inventory with schemas |
 | 1.2 | Tech | Probe PR read and diff | Calls the discovered PR and diff tools against a throwaway sandbox PR | Confirmed read payloads |
 | 1.3 | Tech | Probe comment posting | Attempts one PR-level comment from the MCP server | Confirmed post path or a documented gap |
-| 1.4 | Tech | Write the LLM spike script | Sends one JSON-only request to GitHub Models and, optionally, Ollama; records latency and shape | Working provider config |
+| 1.4 | Tech | Write the LLM spike script | Sends one JSON-only request to Google Gemini's OpenAI-compatible API; records latency and shape | Working provider config |
 | 1.5 | Non-tech | Create a throwaway test PR | Creates a same-repo branch PR with a tiny diff | Safe target for the spike |
 | 1.6 | Tech | Compare auth options | Tests the workflow `GITHUB_TOKEN` and a PAT fallback | Decision: workflow token or PAT secret |
 | 1.7 | Docs | Record findings | Writes `docs/day1-findings.md` with tool names, token result, model, Docker pull time, rate-limit notes, and fallback decision | Integration plan is unblocked |
@@ -158,7 +158,7 @@ artifact. Do not build production code on unverified assumptions.
 **Acceptance:**
 
 - `docs/day1-findings.md` answers README section 10.1 (a), (b), and (c).
-- The chosen GitHub Models model is named and its limits are noted.
+- The chosen Gemini model is named and its free-tier limits are noted.
 - The doc states whether `post_comment` fallback is required.
 - No token is written to the doc or the repo.
 
@@ -212,9 +212,9 @@ uv run pytest tests/test_config.py tests/test_schemas.py -q
 
 **Commit:** `feat: add openai-compatible llm client`  
 **Depends on:** Phase 2  
-**Phase outcome:** One async client works with GitHub Models (and optionally
-Ollama) by changing env vars only. It retries 429/5xx/timeouts with a small
-custom loop, extracts JSON safely, and tracks calls, latency, and tokens.
+**Phase outcome:** One async client works with Google Gemini by changing env
+vars only. It retries 429/5xx/timeouts with a small custom loop, extracts JSON
+safely, and tracks calls, latency, and tokens.
 
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
@@ -234,8 +234,8 @@ real network calls in the default suite.
 
 **Acceptance:**
 
-- The same code path works with `LLM_BASE_URL` pointed at GitHub Models, or
-  optional Ollama.
+- The same code path works with `LLM_BASE_URL` pointed at Google Gemini or
+  another OpenAI-compatible provider.
 - A 429 retries twice and then raises `RateLimitExhausted`.
 - Invalid JSON is surfaced as a typed parse error.
 - No token appears in logs or exception text.
@@ -246,7 +246,7 @@ real network calls in the default suite.
 uv run pytest tests/test_llm.py -q
 ```
 
-Optional local manual check (Ollama running):
+Optional local manual check (Google AI Studio key set):
 
 ```bash
 uv run python -c "import asyncio; from harness.llm import LLMClient; from harness.config import Settings; print(asyncio.run(LLMClient(Settings()).chat_json('Return {\"ok\": true}', 'ping')))"
@@ -684,7 +684,7 @@ the workflow contract is tested.
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
 | 14.1 | Tech | Add the workflow trigger | `pull_request` on `opened`, `synchronize`, `reopened` | Automatic review |
-| 14.2 | Tech | Set permissions and concurrency | `contents: read`, `pull-requests: write`, `models: read`; per-PR cancel-in-progress | Safe, non-overlapping runs |
+| 14.2 | Tech | Set permissions and concurrency | `contents: read`, `pull-requests: write`; per-PR cancel-in-progress | Safe, non-overlapping runs |
 | 14.3 | Tech | Add setup steps | Checkout, `astral-sh/setup-uv`, `uv sync --frozen`, Docker availability check | Reproducible runner |
 | 14.4 | Tech | Add the review step | Runs the CLI with `GITHUB_TOKEN`, `LLM_*`, timeouts, and `DRY_RUN=false` | Live review |
 | 14.5 | Tech | Add the job summary | Writes the comment or a short status to `$GITHUB_STEP_SUMMARY` | Debugging without logs |
@@ -728,7 +728,7 @@ meets the README definition of done.
 
 | # | Type | Step | What it does | Outcome |
 |---|---|---|---|---|
-| 15.1 | Docs | Add quick start | Covers `uv sync`, GitHub Models, CLI dry-run, and optional Ollama | New user can run it |
+| 15.1 | Docs | Add quick start | Covers `uv sync`, the Google Gemini free-tier key, and CLI dry-run | New user can run it |
 | 15.2 | Docs | Link the project docs | Links `AGENTS.md`, `PLAN.md`, `ARCHITECTURE.md`, and `docs/` | Discoverable design |
 | 15.3 | Docs | Add the demo | Records a GIF/video: open PR, show comment, show timeout, show injection case | Interview demo |
 | 15.4 | Docs | Add limitations and tradeoffs | Free-tier quality, fork limitation, summary-only comments, no persistence | Honest engineering |
@@ -808,7 +808,7 @@ description: Run the optional single-config eval locally or in CI and report hon
 
 Suggested workflow:
 
-1. Confirm Ollama is running for local runs, or use GitHub Models for CI.
+1. Confirm the Google AI Studio key is set and the free-tier model is reachable.
 2. Run one case first with `--limit 1` to validate the provider and model.
 3. Run the single config with `--repeats 2` or `3`.
 4. Use the cache unless prompts or the dataset changed.
