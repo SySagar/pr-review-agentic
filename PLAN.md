@@ -1,7 +1,8 @@
 # PLAN.md — Commit-by-commit build plan
 
-This plan turns `README.md` into a sequence of independent, commit-sized phases.
-It is the missing "section 15" build order referenced by the README.
+This plan turns `docs/PRODUCT_SPEC.md` into a sequence of independent,
+commit-sized phases. It is the missing "section 15" build order referenced by the
+specification.
 
 Each phase is **one commit**. You can hand a single phase to an agent and ask it
 to implement, test, and commit without touching the other phases.
@@ -10,7 +11,7 @@ Phases 0–14 are the core product. Phases 15–16 are **optional** and are the
 last build phases before final docs. Skip them if time is short; everything in
 the PR-time pipeline must work first.
 
-- Product source of truth: `README.md`
+- Product source of truth: `docs/PRODUCT_SPEC.md`
 - Agent rules: `AGENTS.md`
 - System design and flows: `ARCHITECTURE.md`
 

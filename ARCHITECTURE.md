@@ -1,8 +1,9 @@
 # ARCHITECTURE.md
 
-System design for the multi-agent PR reviewer described in `README.md`.
+System design for the multi-agent PR reviewer described in `docs/PRODUCT_SPEC.md`.
 
-- Product requirements: `README.md`
+- Project overview: `README.md`
+- Product requirements: `docs/PRODUCT_SPEC.md`
 - Build order: `PLAN.md`
 - Agent working rules: `AGENTS.md`
 

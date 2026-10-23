@@ -4,9 +4,10 @@ Working agreement for AI coding agents in this repository.
 
 ## Read order
 
-1. `README.md` — product source of truth. Read it fully before changing code.
-2. `PLAN.md` — the commit-by-commit build order.
-3. `ARCHITECTURE.md` — components, contracts, external services, and flows.
+1. `README.md` — the project overview and quick start.
+2. `docs/PRODUCT_SPEC.md` — product source of truth. Read it fully before changing code.
+3. `PLAN.md` — the commit-by-commit build order.
+4. `ARCHITECTURE.md` — components, contracts, external services, and flows.
 
 
 ## 1. What this project is
@@ -57,8 +58,8 @@ deviate.
 
 When asked to implement a phase, do exactly that phase.
 
-1. Read the phase in `PLAN.md` and the relevant sections of `README.md` and
-   `ARCHITECTURE.md`.
+1. Read the phase in `PLAN.md` and the relevant sections of
+   `docs/PRODUCT_SPEC.md` and `ARCHITECTURE.md`.
 2. Confirm the phases listed under **Depends on** are already merged. If they
    are not, stop and report the missing dependency.
 3. Implement only the files in that phase's scope. Use the contracts from
