@@ -1,4 +1,7 @@
-"""Minimal diff facts used by the review pipeline - defines the data objects that represent a changed file and a parsed diff."""
+"""Minimal diff facts used by the review pipeline.
+
+Defines the data objects that represent a changed file and a parsed diff.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +12,10 @@ __all__ = ["DiffFile", "DiffInfo"]
 
 @dataclass(frozen=True)
 class DiffFile:
-    """One changed file in a unified diff. Tells about the path, additions, deletions, and changed lines."""
+    """One changed file in a unified diff.
+
+    Carries the path, additions, deletions, and changed line numbers.
+    """
 
     path: str
     additions: int = 0
