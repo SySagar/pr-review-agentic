@@ -28,6 +28,7 @@ from harness.errors import (
     is_retryable,
 )
 from harness.llm_transport import ChatTransport, OpenAICompatibleTransport
+from harness.utils import elapsed_ms
 
 logger = logging.getLogger(__name__)
 
@@ -110,11 +111,11 @@ class LLMClient:
                     await self._sleep(delay)
                     continue
 
-                self._stats.latency_ms += _elapsed_ms(started)
+                self._stats.latency_ms += elapsed_ms(started)
                 raise self._terminal_error(exc) from None
 
             self._stats.calls += 1
-            self._stats.latency_ms += _elapsed_ms(started)
+            self._stats.latency_ms += elapsed_ms(started)
             return self._parse_content(response)
 
     def _parse_content(self, response: Any) -> dict[str, Any]:
@@ -136,10 +137,6 @@ class LLMClient:
         if self._api_key:
             detail = detail.replace(self._api_key, "[REDACTED]")
         return LLMError(f"LLM request failed ({type(exc).__name__}): {detail or 'no detail'}")
-
-
-def _elapsed_ms(started: float) -> int:
-    return int((time.perf_counter() - started) * 1000)
 
 
 def extract_json_object(text: Any) -> dict[str, Any]:
