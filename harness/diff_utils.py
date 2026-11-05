@@ -28,7 +28,8 @@ __all__ = [
     "prepare_diff",
 ]
 
-_HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@") # A regex matching unified diff hunk headers
+# Matches a unified diff hunk header and captures the new-file start line.
+_HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
 
 def parse_diff(diff: str) -> list[DiffFile]:

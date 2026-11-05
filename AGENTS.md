@@ -122,9 +122,9 @@ harness/
   render.py           # final Markdown comment + plain-code fallback
   agents/
     base.py           # prompt + call + timeout + custom retry + status
-    validation.py     # deterministic checks, no LLM call
-    security.py
-    performance.py
+    validation_agent.py   # deterministic checks, no LLM call
+    security_agent.py
+    performance_agent.py
     judge.py
     prompts/          # one short prompt file per LLM agent
   checks/             # deterministic validation checks

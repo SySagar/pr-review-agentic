@@ -448,8 +448,8 @@ call each. With the judge, the default review is **three LLM calls**.
 | 8.5 | Tech | Add the performance prompt | Restricts scope and requires file/line evidence | Focused agent |
 | 8.6 | Test | Add agent tests | Fake LLM returns valid/invalid output, injection text, and timeout | Each agent maps status correctly |
 
-**Files:** `harness/agents/validation.py`, `harness/agents/security.py`,
-`harness/agents/performance.py`,
+**Files:** `harness/agents/validation_agent.py`,
+`harness/agents/security_agent.py`, `harness/agents/performance_agent.py`,
 `harness/agents/prompts/security.md`,
 `harness/agents/prompts/performance.md`, `tests/test_agents.py`.
 

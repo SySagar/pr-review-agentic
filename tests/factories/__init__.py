@@ -5,7 +5,7 @@ from .llm_factory import (
     build_capturing_async_openai,
     build_fake_async_client,
     build_http_error,
-    build_llm_harness,
+    build_llm_client,
     build_llm_response,
     build_llm_settings,
 )
@@ -27,7 +27,7 @@ __all__ = [
     "build_final_review",
     "build_finding",
     "build_http_error",
-    "build_llm_harness",
+    "build_llm_client",
     "build_llm_response",
     "build_llm_settings",
     "build_settings",

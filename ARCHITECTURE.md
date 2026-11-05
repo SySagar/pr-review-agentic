@@ -276,9 +276,9 @@ Rules:
 | `harness/filter.py` | Dedupe, line verify, rank | `filter_findings` |
 | `harness/render.py` | Markdown comment, status table, and fallback | `render_review`, `render_fallback` |
 | `harness/agents/base.py` | Prompt runner, timeout, retry, status | `AgentRunner` |
-| `harness/agents/validation.py` | Deterministic conventions review | `run_validation` |
-| `harness/agents/security.py` | Security and injection review | `run_security` |
-| `harness/agents/performance.py` | Efficiency and logic review | `run_performance` |
+| `harness/agents/validation_agent.py` | Deterministic conventions review | `run_validation` |
+| `harness/agents/security_agent.py` | Security and injection review | `run_security` |
+| `harness/agents/performance_agent.py` | Efficiency and logic review | `run_performance` |
 | `harness/agents/judge.py` | Merge, threshold, verdict, summary | `run_judge` |
 | `harness/agents/prompts/` | Short per-agent prompt text | Markdown files |
 | `harness/checks/` | Ruff, AST, tests-touched, description checks | `run_checks` |
@@ -473,8 +473,8 @@ LLM_API_KEY=<google-ai-studio-key>
 - **Build test data through factories in `tests/factories/`; do not construct
   fixtures inline in test bodies.**
   - Add or extend a factory whenever a new object shape is needed.
-  - Factories return domain objects or small typed harnesses such as
-    `LLMHarness`; the test overrides only the fields relevant to its behavior.
+  - Factories return domain objects and the fakes needed for assertions; keep
+    helpers small and specific to the test boundary.
   - Keep defaults in the factory so one change updates every test.
 - Unit tests must not touch the network, Docker, a real LLM, or GitHub. Inject
   fakes through the same ports the production code uses.

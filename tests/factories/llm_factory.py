@@ -7,7 +7,7 @@ behavior under test and gives one place to change when the LLM layer evolves.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 
@@ -58,6 +58,7 @@ class FakeTransport:
     def __init__(self, *responses: Any) -> None:
         self._responses = list(responses)
         self.calls: list[list[dict[str, str]]] = []
+        self.delays: list[float] = []
 
     async def complete(self, messages: list[dict[str, str]]) -> Any:
         self.calls.append(messages)
@@ -68,14 +69,22 @@ class FakeTransport:
             raise item
         return item
 
+    async def sleep(self, delay: float) -> None:
+        """Record a retry delay without slowing down the test."""
 
-@dataclass
-class LLMHarness:
-    """Bundle of the client under test plus its fakes and recorded delays."""
+        self.delays.append(delay)
 
-    client: LLMClient
-    transport: FakeTransport
-    delays: list[float] = field(default_factory=list)
+
+class SlowTransport:
+    """Fake transport that waits so the agent runtime's timeout can fire."""
+
+    def __init__(self, delay: float = 1.0) -> None:
+        self._delay = delay
+        self.calls: list[list[dict[str, str]]] = []
+
+    async def complete(self, messages: list[dict[str, str]]) -> None:
+        self.calls.append(messages)
+        await asyncio.sleep(self._delay)
 
 
 def build_llm_settings(**env: str) -> Settings:
@@ -110,25 +119,20 @@ def build_capturing_async_openai(captured: dict[str, Any]) -> type:
     return _CapturingAsyncOpenAI
 
 
-def build_llm_harness(
+def build_llm_client(
     *responses: Any,
     settings: Settings | None = None,
     max_retries: int = 2,
     base_backoff_seconds: float = 0.5,
-) -> LLMHarness:
-    """Build an ``LLMClient`` wired to a fake transport and recording sleep."""
+) -> tuple[LLMClient, FakeTransport]:
+    """Build the real LLM client with a scripted transport for offline tests."""
 
     transport = FakeTransport(*responses)
-    delays: list[float] = []
-
-    async def sleep(delay: float) -> None:
-        delays.append(delay)
-
     client = LLMClient(
         settings or build_llm_settings(),
         transport=transport,
-        sleep=sleep,
+        sleep=transport.sleep,
         max_retries=max_retries,
         base_backoff_seconds=base_backoff_seconds,
     )
-    return LLMHarness(client=client, transport=transport, delays=delays)
+    return client, transport

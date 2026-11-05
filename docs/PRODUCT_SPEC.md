@@ -425,9 +425,9 @@ pr-review-bot/
 │   ├── checks/             # deterministic validation checks (ruff, docstrings, tests, description)
 │   └── agents/
 │       ├── base.py         # prompt + schema + call + timeout + retry + status
-│       ├── validation.py
-│       ├── security.py
-│       ├── performance.py
+│       ├── validation_agent.py
+│       ├── security_agent.py
+│       ├── performance_agent.py
 │       └── judge.py
 ├── mcp_servers/
 │   └── review_tools.py     # custom MCP server
